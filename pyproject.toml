@@ -10,6 +10,7 @@ python = "^3.11"
 fastapi = "^0.111.0"
 colorama = "^0.4.6"
 pywa = "^1.22.0"
+supabase = "^2.5.1"
 
 
 [build-system]

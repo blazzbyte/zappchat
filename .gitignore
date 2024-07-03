@@ -81,3 +81,9 @@ venv.bak/
 
 # Logs files
 */logs/*
+
+# Credentials files
+keys.json
+
+# Ids from wa products
+*product_ids.json

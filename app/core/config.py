@@ -21,10 +21,12 @@ class Config:
                 "GOOGLE_CALENDAR_ID": os.environ.get("GOOGLE_CALENDAR_ID"),
                 "GOOGLE_API_KEY": os.environ.get("GOOGLE_API_KEY"),
                 "GOOGLE_TOKEN": os.environ.get("GOOGLE_TOKEN"),
+                "GOOGLE_PROJECT_ID": os.environ.get("GOOGLE_PROJECT_ID"),
 
                 "WA_TOKEN": os.environ.get("WA_TOKEN"),
                 "WA_PHONE_ID": os.environ.get("WA_PHONE_ID"),
                 "WA_VERIFY_TOKEN": os.environ.get("WA_VERIFY_TOKEN"),
+                "WA_CATALOG_ID": os.environ.get("WA_CATALOG_ID"),
 
                 "LITELLM_API_KEY": os.environ.get("LITELLM_API_KEY"),
                 "SUPABASE_API_KEY": os.environ.get("SUPABASE_API_KEY")
@@ -58,14 +60,20 @@ class Config:
     def get_google_token(self):
         return self.config["API_KEYS"]["GOOGLE_TOKEN"]
 
+    def get_google_project_id(self):
+        return self.config["API_KEYS"]["GOOGLE_PROJECT_ID"]
+
     def get_wa_token(self):
         return self.config["API_KEYS"]["WA_TOKEN"]
-    
+
     def get_wa_phone_id(self):
         return self.config["API_KEYS"]["WA_PHONE_ID"]
-    
+
     def get_wa_verify_id(self):
-        return self.config["API_KEYS"]["WA_VERIFY_TOKEN"]    
+        return self.config["API_KEYS"]["WA_VERIFY_TOKEN"]
+
+    def get_wa_catalog_id(self):
+        return self.config["API_KEYS"]["WA_CATALOG_ID"]
 
     def get_litellm_api_key(self):
         return self.config["API_KEYS"]["LITELLM_API_KEY"]

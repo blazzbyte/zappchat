@@ -11,6 +11,8 @@ fastapi = "^0.111.0"
 colorama = "^0.4.6"
 pywa = "^1.22.0"
 supabase = "^2.5.1"
+langchain-google-vertexai = "^1.0.6"
+langchain-community = "^0.2.6"
 
 
 [build-system]

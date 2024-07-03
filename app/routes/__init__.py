@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 
-from . import route1, route2
+from . import products, route2
 
-router = APIRouter()
+api_router = APIRouter()
 
-router.include_router(route2.router, prefix="/route1", tags=["test1"])
-router.include_router(route1.router, prefix="/route2", tags=["test2"])
+api_router.include_router(route2.router, prefix="/route2", tags=["api"])
+api_router.include_router(products.router, prefix="/products", tags=["api"])
 
-__all__ = ['router']
+__all__ = ['api_router']

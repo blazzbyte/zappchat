@@ -1,8 +1,18 @@
+from typing import Dict, Any
+from supabase import Client
+
+from app.utils import logger
 
 
 class ProductService:
-    def __init__(self, wa):
-        self.wa = wa
+    def __init__(self, sb_client: Client):
+        self.sb: Client = sb_client
+
+    def add_product(self, product: Dict[str, Any]) -> Dict[str, Any]:
+        response = self.sb.table('documents').insert(product).execute()
+        if response.get('error'):
+            logger.error(f"Error uploading product: {response['error']}")
+        return response['data']
 
     def get_products(self):
         """

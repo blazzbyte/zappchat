@@ -56,12 +56,14 @@ def gemini_llm() -> ChatVertexAI:
         HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
     }
 
+    project_id = config.get_google_project_id()
+
     parameters = {
         "model_name": "gemini-1.5-pro-preview-0514",
         "temperature": 0.0,
         "max_retries": 1,
         "max_tokens": 512,
-        "project": config.get_google_project_id or os.getenv("VERTEXAI_PROJECT"),
+        "project": project_id,
         "location": "us-central1",
         "safety_settings": safety_settings
     }

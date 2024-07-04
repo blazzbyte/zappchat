@@ -15,12 +15,11 @@ class Config:
         load_dotenv()
         self.config = {
             "STORAGE": {
-                "LOGS_DIR": os.environ.get("LOGS_DIR")
+                "LOGS_DIR": os.environ.get("LOGS_DIR"),
+                "MEDIA_DIR": os.environ.get("MEDIA_DIR")
             },
             "API_KEYS": {
-                "GOOGLE_CALENDAR_ID": os.environ.get("GOOGLE_CALENDAR_ID"),
                 "GOOGLE_API_KEY": os.environ.get("GOOGLE_API_KEY"),
-                "GOOGLE_TOKEN": os.environ.get("GOOGLE_TOKEN"),
                 "GOOGLE_PROJECT_ID": os.environ.get("GOOGLE_PROJECT_ID"),
 
                 "WA_TOKEN": os.environ.get("WA_TOKEN"),
@@ -28,16 +27,10 @@ class Config:
                 "WA_VERIFY_TOKEN": os.environ.get("WA_VERIFY_TOKEN"),
                 "WA_CATALOG_ID": os.environ.get("WA_CATALOG_ID"),
 
-                "LITELLM_API_KEY": os.environ.get("LITELLM_API_KEY"),
                 "SUPABASE_API_KEY": os.environ.get("SUPABASE_API_KEY")
             },
             "API_ENDPOINTS": {
-                "GOOGLE_CALENDAR": os.environ.get("GOOGLE_CALENDAR_API_ENDPOINT"),
-
-                "LITELLM_API_BASE": os.environ.get("LITELLM_API_BASE"),
-                "SUPABASE_API_URL": os.environ.get("SUPABASE_API_URL"),
-
-                "CLIENT_APP_URL": os.environ.get("CLIENT_APP_URL")
+                "SUPABASE_API_URL": os.environ.get("SUPABASE_API_URL")
             },
             "TIMEOUT": {
                 "INFERENCE": os.environ.get("INFERENCE")
@@ -48,17 +41,8 @@ class Config:
     def get_config(self):
         return self.config
 
-    def get_google_calendar_id(self):
-        return self.config["API_KEYS"]["GOOGLE_CALENDAR_ID"]
-
-    def get_google_calendar_api_endpoint(self):
-        return self.config["API_ENDPOINTS"]["GOOGLE_CALENDAR"]
-
     def get_google_api_key(self):
         return self.config["API_KEYS"]["GOOGLE_API_KEY"]
-
-    def get_google_token(self):
-        return self.config["API_KEYS"]["GOOGLE_TOKEN"]
 
     def get_google_project_id(self):
         return self.config["API_KEYS"]["GOOGLE_PROJECT_ID"]
@@ -75,23 +59,17 @@ class Config:
     def get_wa_catalog_id(self):
         return self.config["API_KEYS"]["WA_CATALOG_ID"]
 
-    def get_litellm_api_key(self):
-        return self.config["API_KEYS"]["LITELLM_API_KEY"]
-
-    def get_litellm_api_base_url(self):
-        return self.config["API_ENDPOINTS"]["LITELLM_API_BASE"]
-
     def get_supabase_api_key(self):
         return self.config["API_KEYS"]["SUPABASE_API_KEY"]
 
     def get_supabase_api_url(self):
         return self.config["API_ENDPOINTS"]["SUPABASE_API_URL"]
 
-    def get_client_base_url(self):
-        return self.config["API_ENDPOINTS"]["CLIENT_APP_URL"]
-
     def get_logs_dir(self):
         return self.config["STORAGE"]["LOGS_DIR"]
+
+    def get_media_dir(self):
+        return self.config["STORAGE"]["MEDIA_DIR"]
 
     def get_timeout_inference(self):
         return self.config["TIMEOUT"]["INFERENCE"]

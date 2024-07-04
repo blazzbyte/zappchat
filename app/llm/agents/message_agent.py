@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+import os
+import base64
 from typing import Any
 
 from pywa import WhatsApp
 from pywa.types import Message, MessageType
 
+from langchain_google_vertexai import ChatVertexAI, HarmBlockThreshold, HarmCategory
+from langchain_core.messages import HumanMessage
 from langchain_core.tools import StructuredTool
 from langchain.pydantic_v1 import BaseModel, Field
 
+from app.core import config
 from app.llm.agents.agent import Agent
   
 # Define a dictionary that maps message types to their string representations
@@ -55,15 +60,15 @@ def agent(client: WhatsApp, msg: Message):
     Map_tool = StructuredTool.from_function(
         func=send_location,
         name="Location",
-        description="Sends the maps location of the store",
+        description="Sends the maps location of the store, when the user ask for it",
         args_schema=MapsInput,
         return_direct=True,
     )
-
+    os.makedirs(os.path.join(os.getenv("ROOT_DIR"), "temp"), exist_ok=True)
     # Initialize the LLM agent
     agent = Agent(tooles=Map_tool)
 
-    response = agent.invoke({"input": "hi, im bob", "datehour": 'The current date is Wednesday, July 03, 2024 and the current time in 24h format is 23:56:49'})
+    response = agent.invoke({"input": user_message, "datehour": 'The current date is Wednesday, July 04, 2024 and the current time in 24h format is 23:56:49'})
 
     # Handle the agent's response
     handle_agent_response(client, msg, response)
@@ -79,26 +84,71 @@ def extract_message_content(msg: Message) -> str | None:
     Returns:
         The content of the message as a string, or None if the message type is not supported.
     """
+    safety_settings = {
+        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    }
+
+    llm = ChatVertexAI(
+        model_name= "gemini-1.5-pro-preview-0514",
+        temperature= 0.0,
+        max_retries= 5,
+        max_tokens= 1024,
+        project= config.get_google_project_id or os.getenv("VERTEXAI_PROJECT"),
+        location= "asia-southeast1",
+        safety_settings= safety_settings
+    )
+
+
     if msg.type == MessageType.TEXT:
         return msg.text
     elif msg.type == MessageType.IMAGE:
-        return msg.image.download()
+        image_b64 = base64.b64encode(msg.image.download(path=os.path.join(os.getenv("ROOT_DIR"), "temp"),in_memory=True)).decode("utf-8")
+        Ans = llm.invoke([
+            HumanMessage(
+                content=[
+                    {"type": "text", "text": "Give me a Detail summary of the image in order to help a blind person to see"},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"}},
+                    ]
+                ),
+            ])
+        return Ans.content
     elif msg.type == MessageType.VIDEO:
-        return msg.video.download()
+        video_b64 = base64.b64encode(msg.video.download(path=os.path.join(os.getenv("ROOT_DIR"), "temp"),in_memory=True)).decode("utf-8")
+        Ans = llm.invoke(
+            [
+                HumanMessage(
+                    content=[
+                        {"type": "text", "text": "Give me a Summary of video, for a blind person to be able to understand"},
+                        {"type": "media", "mime_type": "video/mp4", "data": video_b64},
+                    ]
+                ),
+            ]
+        )
+        return Ans.content
     elif msg.type == MessageType.AUDIO:
-        return msg.audio.download()
-    elif msg.type == MessageType.DOCUMENT:
-        return msg.document.download()
+        audio_b64 = base64.b64encode(msg.audio.download(path=os.path.join(os.getenv("ROOT_DIR"), "temp"),in_memory=True)).decode("utf-8")
+        Ans = llm.invoke(
+            [
+                HumanMessage(
+                    content=[
+                        {"type": "text", "text": "Give me a Summary of the audio, for a deaf person to be able to understand for what it is"},
+                        {"type": "media", "mime_type": "audio/mp3", "data": audio_b64},
+                    ]
+                ),
+            ]
+        )
+        return Ans.content
     elif msg.type == MessageType.LOCATION:
-        return f"Latitude: {msg.location.latitude}, Longitude: {msg.location.longitude}"
+        return f"name of the location: {msg.location.name}, address of the location: {msg.location.address}"
     elif msg.type == MessageType.CONTACTS:
-        return ", ".join([contact.name.formatted_name for contact in msg.contacts])
+        return ", ".join([f"name: {contact.name.formatted_name}, phone_number/s: {contact.phones}" for contact in msg.contacts])
     elif msg.type == MessageType.ORDER:
-        return f"Order for {len(msg.order.products)} products"
-    elif msg.type == MessageType.SYSTEM:
-        return msg.system.body
-    elif msg.type == MessageType.REACTION:
-        return msg.reaction.emoji
+        text = f"Order for {len(msg.order.products)} productsj, which total price is {msg.order.total_price}"
+        text+= f"\nThe user message is: {msg.order.text}" if msg.order.text else ""
+        return text
     else:
         return None
 

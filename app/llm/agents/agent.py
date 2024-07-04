@@ -11,7 +11,7 @@ from app.llm.utils.helpers import _format_chat_history, prompting
 from app.llm.providers.gemini import gemini_llm
 from app.llm.tools.tool import basic_tools
 
-def Agent(tooles:Union[List[Tool]|Tool]) -> AgentExecutor:
+def Agent(tooles:Union[List[Tool], Tool]) -> AgentExecutor:
 
     llm = gemini_llm()
 

@@ -11,6 +11,14 @@ from app.core import config
 
 app = FastAPI()
 
+from pathlib import Path
+import os
+
+# Get the absolute path of the current file
+current_file = Path(__file__).absolute()
+
+os.environ["ROOT_DIR"] = current_file
+
 # ** Middlewares **
 app.add_middleware(
     CORSMiddleware,

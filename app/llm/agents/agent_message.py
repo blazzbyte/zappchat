@@ -1,28 +1,24 @@
-from typing import List, Union
 from langchain.agents.format_scratchpad import format_to_openai_function_messages
 from langchain_community.tools.convert_to_openai import format_tool_to_openai_function
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
 from langchain_core.runnables import RunnableLambda
 from langchain.memory import ConversationBufferMemory
-from langchain_core.tools import Tool
+
 from langchain.agents import AgentExecutor
 
 from app.llm.utils.helpers import _format_chat_history, prompting
 from app.llm.providers.gemini import gemini_llm
-from app.llm.tools.tool import basic_tools
 
-def Agent(tooles:Union[List[Tool], Tool]) -> AgentExecutor:
+from ..tools import tools
+
+
+def agent_message() -> AgentExecutor:
 
     llm = gemini_llm()
 
-    tools = basic_tools()
-
-    if isinstance(tooles, Tool):
-        tools.append(tooles)
-    else:
-        tools = tools + tooles
-
-    llm_with_tools = llm.bind(functions=[format_tool_to_openai_function(t) for t in tools])
+    llm_with_tools = llm.bind(
+        functions=[format_tool_to_openai_function(t) for t in tools]
+    )
 
     agent = (
         {
@@ -38,7 +34,8 @@ def Agent(tooles:Union[List[Tool], Tool]) -> AgentExecutor:
         | OpenAIFunctionsAgentOutputParser()
     )
 
-    memory = ConversationBufferMemory(input_key='input', return_messages=True, memory_key="chat_history", output_key="output")
+    memory = ConversationBufferMemory(
+        input_key='input', return_messages=True, memory_key="chat_history", output_key="output")
 
     agent_executor = AgentExecutor(
         agent=agent,
@@ -48,4 +45,5 @@ def Agent(tooles:Union[List[Tool], Tool]) -> AgentExecutor:
         return_intermediate_steps=True,
         handle_parsing_errors=True
     )
+
     return agent_executor

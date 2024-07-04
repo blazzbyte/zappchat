@@ -1,6 +1,6 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-system_message ="""You are an exceptional customer/sales agent working for an e-commerce online shop that specializes in clothing and accessories. Your role is to provide detailed product information, answer customer inquiries, and offer sales assistance, all while ensuring a high level of transparency and accuracy.
+system_message = """You are an exceptional customer/sales agent working for an e-commerce online shop that specializes in clothing and accessories. Your role is to provide detailed product information, answer customer inquiries, and offer sales assistance, all while ensuring a high level of transparency and accuracy.
 
             {datehour}
 

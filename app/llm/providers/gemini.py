@@ -1,63 +1,78 @@
+"""Module for initializing the Gemini LLM with fallback models."""
 import os
-from langchain.llms.openai import BaseOpenAI
+from typing import List
+from langchain_google_vertexai import ChatVertexAI, HarmBlockThreshold, HarmCategory
 
 from app.core import config
 
-
-def gemini_llm() -> BaseOpenAI:
+def gemini_llm() -> ChatVertexAI:
     """
     Returns a Gemini LLM with fallback models.
 
-    This function creates an OpenAI model with safety settings and fallback models
-    from the Gemini model list.
+    This function creates a ChatVertexAI instance configured with safety settings
+    and fallback models across different Google Cloud regions.
+    The fallback mechanism ensures the LLM remains accessible even if the primary
+    region experiences issues.
 
     Returns:
-        BaseOpenAI: The Gemini LLM with fallback models.
+        ChatVertexAI: An instance of the ChatVertexAI class configured with fallbacks.
     """
 
-    model_list = [
-        "gemini-1.5-flash-preview-0514",
-        "gemini-1.5-pro-latest",
-        "gemini-1.5-flash",
-        "gemini-1.5-pro-1",
-        "gemini-1.5-flash-1"
+    locations: List[str] = [
+        "northamerica-northeast1",
+        "southamerica-east1",
+        "us-east1",
+        "us-east4",
+        "us-east5",
+        "us-south1",
+        "us-west1",
+        "us-west4",
+        "asia-east1",
+        "asia-east2",
+        "asia-northeast1",
+        "asia-northeast3",
+        "asia-south1",
+        "asia-southeast1",
+        "australia-southeast1",
+        "europe-central2",
+        "europe-north1",
+        "europe-southwest1",
+        "europe-west1",
+        "europe-west2",
+        "europe-west3",
+        "europe-west4",
+        "europe-west6",
+        "europe-west8",
+        "europe-west9",
+        "me-central1",
+        "me-central2",
+        "me-west1",
     ]
 
-    api_key = config.get_litellm_api_key()  # Master Key from LiteLLM
-    api_base = config.get_litellm_api_base_url()
-
-    safety_settings = [
-        {
-            "category": "HARM_CATEGORY_HARASSMENT",
-            "threshold": "BLOCK_ONLY_HIGH",
-        },
-        {
-            "category": "HARM_CATEGORY_HATE_SPEECH",
-            "threshold": "BLOCK_ONLY_HIGH",
-        },
-        {
-            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            "threshold": "BLOCK_ONLY_HIGH",
-        },
-        {
-            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-            "threshold": "BLOCK_ONLY_HIGH",
-        },
-    ]
-
-    parameters = {
-        # Put public_name from model display in LiteLLM Proxy
-        "model_name": "gemini-1.5-pro-preview-0514-0",
-        "openai_api_base": api_base,
-        "openai_api_key": api_key,
-        "model_kwargs": {
-            "safety_settings": safety_settings,
-            # Put public_name from model display in LiteLLM Proxy
-            "engine": 'gemini-1.5-pro-preview-0514-0',
-            "fallbacks": model_list
-        }
+    safety_settings = {
+        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
     }
 
-    gemini = BaseOpenAI(**parameters)
+    parameters = {
+        "model_name": "gemini-1.5-pro-preview-0514",
+        "temperature": 0.0,
+        "max_retries": 1,
+        "max_tokens": 512,
+        "project": config.get_google_project_id or os.getenv("VERTEXAI_PROJECT"),
+        "location": "us-central1",
+        "safety_settings": safety_settings
+    }
+
+    gemini = ChatVertexAI(**parameters)
+
+    fallbacks = []
+    for location in locations:
+        parameters.update({"location": location})
+        fallbacks.append(ChatVertexAI(**parameters))
+
+    gemini.with_fallbacks(fallbacks=fallbacks)
 
     return gemini

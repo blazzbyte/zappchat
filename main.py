@@ -1,23 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
 
 from pywa import WhatsApp
-from pywa.types import Message, CallbackButton, CallbackSelection, MessageStatus, ChatOpened
+from pywa.handlers import MessageHandler
 
-from app.routes import api_router
-from app.webhooks.wa_handler import handle_message, handle_callback_button, handle_callback_selection, handle_message_status, handle_chat_opened
+from app.webhooks.wa_handler import handle_message
 from app.core import config
 
 app = FastAPI()
-
-from pathlib import Path
-import os
-
-# Get the absolute path of the current file
-current_file = Path(__file__).absolute()
-
-os.environ["ROOT_DIR"] = current_file
 
 # ** Middlewares **
 app.add_middleware(
@@ -28,12 +18,7 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-# ** Routes **
-@app.get("/")
-async def redirect_to_docs():
-    return RedirectResponse(url="/docs")
-
-app.include_router(api_router, prefix="/api")
+# app.include_router(api_router, prefix="/api")
 
 # ** -------- WHATSAPP ------- **
 wa_token = config.get_wa_token()
@@ -45,26 +30,9 @@ wa = WhatsApp(
     phone_id=wa_phone_id,
     token=wa_token,
     server=app,
-    verify_token=wa_verify_token
+    verify_token=wa_verify_token,
+    api_version=19.0
 )
 
 # ** Whatsapp WebHooks **
-@wa.on_message()
-def on_message_handler(client: WhatsApp, msg: Message):
-    handle_message(client, msg.reply)
-
-@wa.on_callback_button()
-def on_callback_button_handler(client: WhatsApp, clb: CallbackButton):
-    handle_callback_button(client, clb)
-
-@wa.on_callback_selection()
-def on_callback_selection_handler(client: WhatsApp, selection: CallbackSelection):
-    handle_callback_selection(client, selection)
-
-@wa.on_message_status()
-def on_message_status_handler(client: WhatsApp, status: MessageStatus):
-    handle_message_status(client, status)
-
-@wa.on_chat_opened()
-def on_chat_opened_handler(client: WhatsApp, chat: ChatOpened):
-    handle_chat_opened(client, chat)
+wa.add_handlers(MessageHandler(handle_message))

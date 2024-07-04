@@ -10,7 +10,7 @@ from ..utils.products import transform_products
 class SupabaseStore:
 
     def __init__(self, client: Client, embedding: VertexAIEmbeddings, table: str = "documents", query_name: str = "match_documents"):
-        self.store = SupabaseVectorStore(
+        self.store:SupabaseVectorStore = SupabaseVectorStore(
             client=client,
             embedding=embedding,
             table_name=table,
